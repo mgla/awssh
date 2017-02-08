@@ -1,0 +1,81 @@
+#!/usr/bin/env python
+
+# python modules
+import argparse
+import sys
+
+# extra modules
+import boto3
+import texttable
+import subprocess
+
+parser = argparse.ArgumentParser(description='CLI interface for awsssh.')
+parser.add_argument('-v', '--verbose', action='store_true', help='Verbose output.')
+args = parser.parse_args()
+
+if args.verbose:
+    print args
+
+
+filters=[
+    {'Name': 'tag:Customer', 'Values': ['Cbc']},
+    ]
+
+
+primary_keys = [
+    'Name',
+    'Customer',
+    'CustomerProject',
+    'Role'
+]
+
+ec = boto3.client('ec2')
+reservations = ec.describe_instances(
+    Filters= filters
+)['Reservations']
+instances = sum(
+[
+    [i for i in r['Instances']]
+    for r in reservations
+    ], [])
+
+import pprint
+pp = pprint.PrettyPrinter()
+
+table = texttable.Texttable()
+table.set_cols_align(['r', 'l'] + ['r'] * len(primary_keys))
+table.set_cols_width([3, 15] + [round(80.0 / len(primary_keys))] * len(primary_keys))
+table.add_row(['#', 'IP'] + primary_keys)
+row = 0
+ips = []
+for instance in instances:
+    if 'PrivateIpAddress' in instance:
+        ip = instance['PrivateIpAddress']
+        ips.append(ip)
+        assert 'Tags' in instance
+        found_keys = {}
+        for found_tag in filter(lambda tag: tag['Key'] in primary_keys, instance['Tags']):
+            found_keys[found_tag['Key']] = found_tag['Value']
+
+        display = [row, ip]
+        row += 1
+        for  key in primary_keys:
+            if key in found_keys:
+                display.append(found_keys[key])
+            else:
+                display.append('')
+        table.add_row(display)
+    else:
+        if args.verbose:
+            print "Instance with no IP found."
+print(table.draw() + "\n")
+number = None
+
+while number == None:
+    try:
+        number = int(input("Enter the number of the machine you want to connect to: " ))
+    except NameError, e:
+        print "Not a number? Try again."
+        number = None
+
+ret = subprocess.call(['ssh', '-Atv', 'aws-staging-bastion', 'ssh', ips[number]])

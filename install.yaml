@@ -1,0 +1,19 @@
+---
+
+- hosts: localhost
+  tasks:
+    - name: Install dependencies
+      apt: name={{ item }} state=installed update_cache=yes
+      with_items:
+        python-texttable
+      become: true
+      when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+
+    - name: install awsssh to /usr/local/bin
+      copy:
+        src: ./awssh
+        dest: /usr/local/bin/awssh
+        owner: root
+        group: root
+        mode: 0755
+      become: true
