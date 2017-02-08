@@ -1,0 +1,2 @@
+# awsssh
+AWS SSH wrapper
