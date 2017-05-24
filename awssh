@@ -2,12 +2,12 @@
 
 # python modules
 import argparse
+import subprocess
 import sys
 
 # extra modules
 import boto3
 import texttable
-import subprocess
 
 parser = argparse.ArgumentParser(description='CLI interface for awsssh.')
 parser.add_argument('-v', '--verbose', action='store_true', help='Verbose output.')
@@ -48,6 +48,7 @@ table.set_cols_width([3, 15] + [round(80.0 / len(primary_keys))] * len(primary_k
 table.add_row(['#', 'IP'] + primary_keys)
 row = 0
 ips = []
+
 for instance in instances:
     if 'PrivateIpAddress' in instance:
         ip = instance['PrivateIpAddress']
@@ -78,4 +79,4 @@ while number == None:
         print "Not a number? Try again."
         number = None
 
-ret = subprocess.call(['ssh', '-Atv', 'aws-staging-bastion', 'ssh', ips[number]])
+ret = subprocess.call(['ssh', ips[number]])
