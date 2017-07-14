@@ -18,8 +18,15 @@ if args.verbose:
 
 
 filters=[
-    {'Name': 'tag:Customer', 'Values': ['Cbc']},
-    ]
+    {
+        'Name': 'tag:Customer',
+        'Values': ['Cbc']
+    },
+    {
+        'Name': 'instance-state-code',
+        'Values': ['16']
+    }
+]
 
 
 primary_keys = [
